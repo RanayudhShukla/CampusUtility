@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/smart-campus";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 let cached = (global as any).mongoose;
 
@@ -9,6 +9,10 @@ if (!cached) {
 }
 
 async function dbConnect() {
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI environment variable is not defined. Please add it to your environment variables (e.g. in Vercel dashboard).");
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -16,6 +20,7 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds instead of 30 seconds
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
